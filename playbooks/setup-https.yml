@@ -1,0 +1,49 @@
+- name: Configure HTTPS
+  hosts: jenkins:nexus:sonar
+  become: true
+
+  vars:
+    app_domain: >-
+      {{ domain.jenkins if 'jenkins' in group_names else
+         domain.nexus if 'nexus' in group_names else
+         domain.sonar }}
+    app_port: >-
+      {{ 8080 if 'jenkins' in group_names else
+         8081 if 'nexus' in group_names else
+         9000 }}
+
+  tasks:
+    - name: Configure Nginx
+      template:
+        src: ../templates/nginx.conf.j2
+        dest: /etc/nginx/sites-available/devops
+
+    - name: Enable site
+      file:
+        src: /etc/nginx/sites-available/devops
+        dest: /etc/nginx/sites-enabled/devops
+        state: link
+
+    - name: Remove default site
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Check Nginx configuration
+      command: nginx -t
+      changed_when: false
+
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: reloaded
+
+    - name: Enable HTTPS
+      command: >
+        certbot --nginx
+        --non-interactive
+        --agree-tos
+        --redirect
+        --keep-until-expiring
+        --email {{ email }}
+        -d {{ app_domain }}

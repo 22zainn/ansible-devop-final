@@ -1,0 +1,6 @@
+- import_playbook: reserve-ips.yml
+- import_playbook: create-vms.yml
+- import_playbook: common.yml
+- import_playbook: install-nexus.yml
+- import_playbook: install-sonarqube.yml
+- import_playbook: install-jenkins.yml

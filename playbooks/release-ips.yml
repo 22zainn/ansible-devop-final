@@ -1,0 +1,16 @@
+- name: Release GCP static IPs
+  hosts: controller
+  gather_facts: false
+
+  environment:
+    GOOGLE_APPLICATION_CREDENTIALS: "{{ adc_path }}"
+
+  tasks:
+    - name: Release reserved IP addresses
+      google.cloud.gcp_compute_address:
+        name: "{{ item }}-ip"
+        region: "{{ gcp_region }}"
+        project: "{{ google_project_id }}"
+        auth_kind: application
+        state: absent
+      loop: "{{ vm_names }}"

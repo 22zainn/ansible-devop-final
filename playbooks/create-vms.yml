@@ -1,0 +1,81 @@
+- name: Create Google Cloud VMs
+  hosts: controller
+  gather_facts: false
+
+  environment:
+    GOOGLE_APPLICATION_CREDENTIALS: "{{ adc_path }}"
+
+  tasks:
+    - name: Get reserved static IPs
+      google.cloud.gcp_compute_address:
+        name: "{{ item }}-ip"
+        region: "{{ gcp_region }}"
+        project: "{{ google_project_id }}"
+        auth_kind: application
+        state: present
+      loop: "{{ vm_names }}"
+      register: reserved_ips
+
+    - name: Create VMs
+      google.cloud.gcp_compute_instance:
+        name: "{{ item.item }}"
+        machine_type: "{{ 'e2-standard-4' if item.item == 'server-sonar' else 'e2-standard-2' }}"
+        zone: "{{ gcp_zone }}"
+        project: "{{ google_project_id }}"
+        auth_kind: application
+        state: present
+
+        disks:
+          - auto_delete: true
+            boot: true
+            initialize_params:
+              source_image: "projects/ubuntu-os-cloud/global/images/family/ubuntu-2404-lts-amd64"
+              disk_size_gb: 30
+
+        network_interfaces:
+          - network:
+              selfLink: "global/networks/default"
+            access_configs:
+              - name: External NAT
+                type: ONE_TO_ONE_NAT
+                nat_ip:
+                  address: "{{ item.address }}"
+
+        metadata:
+          ssh-keys: "{{ user }}:{{ lookup('file', ssh_public_key) }}"
+          enable-oslogin: "FALSE"
+
+        labels:
+          managed_by: ansible
+
+        tags:
+          items:
+            - devops-server
+            - http-server
+            - https-server
+
+      loop: "{{ reserved_ips.results }}"
+      register: created_vms
+
+    - name: Update inventory.ini automatically
+      ansible.builtin.blockinfile:
+        path: "{{ playbook_dir }}/../inventory.ini"
+        marker: "# {mark} ANSIBLE MANAGED GCP HOSTS"
+        block: |
+          [jenkins]
+          server-jenkins ansible_host={{ created_vms.results[0].networkInterfaces[0].accessConfigs[0].natIP }}
+
+          [nexus]
+          server-nexus ansible_host={{ created_vms.results[1].networkInterfaces[0].accessConfigs[0].natIP }}
+
+          [sonar]
+          server-sonar ansible_host={{ created_vms.results[2].networkInterfaces[0].accessConfigs[0].natIP }}
+
+    - name: Print created VM IPs
+      ansible.builtin.debug:
+        msg: "{{ item.name }} -> {{ item.networkInterfaces[0].accessConfigs[0].natIP }}"
+      loop: "{{ created_vms.results }}"
+      loop_control:
+        label: "{{ item.name }}"
+    - name: Refresh inventory
+      meta: refresh_inventory

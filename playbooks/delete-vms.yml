@@ -1,0 +1,16 @@
+- name: Delete GCP VMs
+  hosts: controller
+  gather_facts: false
+
+  environment:
+    GOOGLE_APPLICATION_CREDENTIALS: "{{ adc_path }}"
+
+  tasks:
+    - name: Delete project VMs
+      google.cloud.gcp_compute_instance:
+        name: "{{ item }}"
+        zone: "{{ gcp_zone }}"
+        project: "{{ google_project_id }}"
+        auth_kind: application
+        state: absent
+      loop: "{{ vm_names }}"

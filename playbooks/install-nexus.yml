@@ -1,0 +1,28 @@
+- name: Install Nexus
+  hosts: nexus
+  become: true
+
+  tasks:
+    - name: Create Nexus volume
+      community.docker.docker_volume:
+        name: nexus_data
+
+    - name: Run Nexus
+      community.docker.docker_container:
+        name: nexus
+        image: sonatype/nexus3:latest
+        state: started
+        restart_policy: unless-stopped
+        ports:
+          - "127.0.0.1:8081:8081"
+        volumes:
+          - nexus_data:/nexus-data
+
+    - name: Wait for Nexus
+      uri:
+        url: http://127.0.0.1:8081/
+        status_code: [200, 302]
+      register: result
+      until: result.status | default(0) in [200, 302]
+      retries: 30
+      delay: 10

@@ -1,0 +1,105 @@
+# =====================================
+# OS Files
+# =====================================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.Trash-*
+
+# =====================================
+# IDE / Editor
+# =====================================
+.vscode/
+.idea/
+*.iml
+
+# =====================================
+# Python / Ansible
+# =====================================
+venv/
+.venv/
+ansible-venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ansible/
+*.retry
+
+# =====================================
+# Environment Variables / Secrets
+# =====================================
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# =====================================
+# Ansible Secrets
+# =====================================
+vault-password.txt
+.vault_pass
+vault_pass.txt
+secrets.yml
+secrets.yaml
+**/secrets.yml
+**/secrets.yaml
+
+# =====================================
+# Google Cloud Credentials
+# =====================================
+*service-account*.json
+*credentials*.json
+application_default_credentials.json
+gcp-key.json
+
+# =====================================
+# Terraform (if used later)
+# =====================================
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# =====================================
+# Docker
+# =====================================
+docker-compose.override.yml
+compose.override.yml
+
+# =====================================
+# Logs / Temporary Files
+# =====================================
+*.log
+logs/
+tmp/
+temp/
+*.bak
+*.tmp
+
+# =====================================
+# Local Configuration
+# =====================================
+inventory.local.ini
+inventory.local.yml
+inventory.local.yaml

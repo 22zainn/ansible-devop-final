@@ -1,0 +1,46 @@
+- name: Install SonarQube
+  hosts: sonar
+  become: true
+
+  tasks:
+    - name: Configure kernel
+      sysctl:
+        name: vm.max_map_count
+        value: "524288"
+        state: present
+        reload: true
+
+    - name: Create SonarQube directory
+      file:
+        path: /opt/sonarqube
+        state: directory
+
+    - name: Copy Compose file
+      copy:
+        src: ../files/sonarqube-compose.yml
+        dest: /opt/sonarqube/compose.yml
+
+    - name: Configure database password
+      copy:
+        dest: /opt/sonarqube/.env
+        mode: "0600"
+        content: |
+          SONAR_DB_PASSWORD={{ sonar_db_password }}
+      no_log: true
+
+    - name: Run SonarQube
+      command:
+        cmd: docker compose up -d
+        chdir: /opt/sonarqube
+      changed_when: true
+
+    - name: Wait for SonarQube
+      uri:
+        url: http://127.0.0.1:9000/api/system/status
+        return_content: true
+      register: result
+      until: >-
+        result.status | default(0) == 200 and
+        result.json.status | default('') == 'UP'
+      retries: 40
+      delay: 10

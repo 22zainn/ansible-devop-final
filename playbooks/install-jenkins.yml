@@ -1,0 +1,28 @@
+- name: Install Jenkins
+  hosts: jenkins
+  become: true
+
+  tasks:
+    - name: Create Jenkins volume
+      community.docker.docker_volume:
+        name: jenkins_data
+
+    - name: Run Jenkins
+      community.docker.docker_container:
+        name: jenkins
+        image: jenkins/jenkins:lts-jdk21
+        state: started
+        restart_policy: unless-stopped
+        ports:
+          - "127.0.0.1:8080:8080"
+        volumes:
+          - jenkins_data:/var/jenkins_home
+
+    - name: Wait for Jenkins
+      uri:
+        url: http://127.0.0.1:8080/login
+        status_code: [200, 403]
+      register: result
+      until: result.status | default(0) in [200, 403]
+      retries: 30
+      delay: 10

@@ -1,0 +1,23 @@
+- name: Reserve GCP static IPs
+  hosts: controller
+  gather_facts: false
+
+  environment:
+    GOOGLE_APPLICATION_CREDENTIALS: "{{ adc_path }}"
+
+  tasks:
+    - name: Reserve public IP for each server
+      google.cloud.gcp_compute_address:
+        name: "{{ item }}-ip"
+        region: "{{ gcp_region }}"
+        project: "{{ google_project_id }}"
+        address_type: EXTERNAL
+        auth_kind: application
+        state: present
+      loop: "{{ vm_names }}"
+      register: reserved_ips
+
+    - name: Print reserved IP addresses
+      ansible.builtin.debug:
+        msg: "{{ item.item }} = {{ item.address }}"
+      loop: "{{ reserved_ips.results }}"

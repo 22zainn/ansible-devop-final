@@ -1,0 +1,32 @@
+- name: Confirm infrastructure destruction
+  hosts: controller
+  gather_facts: false
+
+  vars_prompt:
+    - name: destroy_confirmation
+      prompt: "Type DESTROY to delete the 3 VMs and static IPs"
+      private: false
+
+  tasks:
+    - name: Verify confirmation
+      assert:
+        that:
+          - destroy_confirmation == "DESTROY"
+        fail_msg: "Infrastructure destruction cancelled."
+
+- import_playbook: delete-vms.yml
+- import_playbook: release-ips.yml
+
+- name: Clean generated inventory
+  hosts: controller
+  gather_facts: false
+
+  tasks:
+    - name: Remove managed GCP hosts
+      blockinfile:
+        path: "{{ playbook_dir }}/../inventory.ini"
+        marker: "# {mark} ANSIBLE MANAGED GCP HOSTS"
+        state: absent
+
+    - name: Refresh inventory
+      meta: refresh_inventory

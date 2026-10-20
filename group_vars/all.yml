@@ -1,0 +1,19 @@
+google_project_id: project-f2a7a9ec-e16e-45a6-bb3
+user: zain
+adc_path: "/home/zain/.config/gcloud/application_default_credentials.json"
+ssh_public_key: /home/zain/.ssh/ansible_ed25519.pub
+ansible_user: zain
+ansible_ssh_private_key_file: /home/zain/.ssh/ansible_ed25519
+gcp_region: "asia-east1"
+gcp_zone: "asia-east1-a"
+vm_names:
+  - server-jenkins
+  - server-nexus
+  - server-sonar
+
+domain:
+  jenkins: "ui.jenkins.huysor.me"
+  nexus: "ui.nexus.huysor.me"
+  sonar: "ui.sonar.huysor.me"
+
+email: "huysorkheang22@gmail.com"
